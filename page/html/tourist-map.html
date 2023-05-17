@@ -58,8 +58,8 @@
   </div>
 </fieldset>
 <div id="echarts-google-map" style="position:absolute;width:100%"></div>
-
 <script src="../lib/layui/layui.js"></script>
+<script src="../js/spots.js"></script>
 <!-- import JavaScript API of Google Map, please replace the key with your own key -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1vz2dhnodD9XetSwpkRkdNTorbdMybAc"></script>
 <!-- import echarts -->
@@ -106,6 +106,7 @@
           coordinateSystem: 'gmap',
           // symbol: 'pin',
           // dimensions: ['lng', 'lat', 'value1', 'value2'],
+          data: spotData,
           encode: {
             tooltip: [0],
             lng: 2,
@@ -161,78 +162,24 @@
       option.tooltip.show = false;
       chart.setOption(option);
     })
-    // Get the instance of Google Map
-    initData()
-
-    function test() {
-      $.ajax({
-        url: "../json/spots.json",
-        dataType: "json",
-        success: function (json) {
-          console.log(111);
-        },
-        error: function (xhr, status, error) {
-          console.error(error);
-        }
-      });
-    }
 
     form.on('submit(search)', function (data) {
-      $.ajax({
-        url: "../json/spots.json",
-        dataType: "json",
-        success: function (json) {
-          console.log(data.field);
-          option.series[0].data = search(json, data.field);
-          chart.setOption(option);
-        },
-        error: function (xhr, status, error) {
-          console.error(error);
-        }
-      });
+      option.series[0].data = search(spotData, data.field);
       return false;
     });
-
-    function initData() {
-      $.ajax({
-        url: "../json/spots.json",
-        // dataType: "json",
-        success: function (data) {
-          // 在这里处理获取到的JSON数据
-          option.series[0].data = data;
-          chart.setOption(option);
-        },
-        error: function (xhr, status, error) {
-          console.error(error);
-        }
-      });
-    }
-
-    $.ajax({
-      url:
-          "https://restapi.amap.com/v3/weather/weatherInfo?city=110000&key=905c6a4746564ecbde5b5267e6201abe&extensions=all",
-      dataType: "json",
-      success: function (data) {
-        // 在这里处理获取到的JSON数据
-        console.log(data.forecasts[0].casts)
-      },
-      error: function (xhr, status, error) {
-        console.error(error);
-      }
-    })
 
     function search(data, field) {
       let filter = "";
       const keyword = field.keyword.trim();
       var zoom = 5;
       if (field.county !== "") {
-        zoom = 11;
+        zoom = 12;
         filter = bioarea.getNameByCode(field.county);
       } else if (field.city !== "") {
         zoom = 9;
         filter = bioarea.getNameByCode(field.city);
       } else if (field.province !== "") {
-        zoom = 7;
+        zoom = 6;
         filter = bioarea.getNameByCode(field.province);
       }
       var result = [];
@@ -272,7 +219,9 @@
         option.gmap.zoom = zoom;
         option.gmap.center = [avgLng / count, avgLat / count];
       }
+      option.series[0].data=result
       chart.setOption(option);
+      console.log(result);
       return result;
     }
 

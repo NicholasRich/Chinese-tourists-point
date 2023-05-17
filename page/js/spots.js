@@ -1,4 +1,4 @@
-[["Prince Gong's Mansion Scenic Area", 39.93590244, 116.38644, "Beijing", "Beijing", "Xicheng District",
+const spotData=[["Prince Gong's Mansion Scenic Area", 39.93590244, 116.38644, "Beijing", "Beijing", "Xicheng District",
 110102],
 ["The Palace Museum", 39.917248, 116.397176, "Beijing", "Beijing", "Dongcheng District", 110101],
 ["Tiantan Park", 39.881265, 116.410638,"Beijing", "Beijing", "Dongcheng District", 110101],
