@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Awesome chinese tourist spots</title>
+  <style>
+      #search-fieldset {
+          margin-top: 10px;
+          margin-left: 10px;
+          margin-right: 10px;
+          border-color: #d3d3d3;
+      }
+  </style>
+  <link href="../lib/layui/css/layui.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/common.css">
+</head>
+<body>
+<!-- HTML Content -->
+<fieldset id="search-fieldset" class="layui-elem-field">
+  <legend>Awesome Chinese Tourist Spots</legend>
+  <div class="layui-field-box">
+    <form class="layui-form bio-form-box" action="" lay-filter="example">
+      <div class="layui-col-xs12">
+        <div class="layui-form-item" id="bioarea-wrap">
+          <label class="layui-form-label ">Province</label>
+          <div class="layui-input-inline">
+            <select style="" class="level-1-select" lay-filter="#bioarea-wrap1level"
+                    name="province">
+              <option value="">Select a Province</option>
+            </select>
+          </div>
+          <label class="layui-form-label ">City</label>
+          <div class="layui-input-inline">
+            <select class="level-2-select" lay-filter="#bioarea-wrap2level" name="city">
+              <option value="">Select a City</option>
+            </select>
+          </div>
+          <label class="layui-form-label ">District</label>
+          <div class="layui-input-inline">
+            <select class="level-3-select" lay-filter="#bioarea-wrap3level" name="county">
+              <option value="">Select a District</option>
+            </select>
+          </div>
+          <label class="layui-form-label ">Search</label>
+          <div class="layui-input-inline">
+            <input type="text" name="keyword" placeholder="Input Key Words" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-form-item" style="text-align: center">
+          <div class="layui-inline">
+            <button class="layui-btn" lay-submit lay-filter="search">Filter</button>
+            <button type="reset" class="layui-btn layui-btn-primary">Reset</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</fieldset>
+<div id="echarts-google-map" style="position:absolute;width:100%"></div>
+
+<script src="../lib/layui/layui.js"></script>
+<!-- import JavaScript API of Google Map, please replace the key with your own key -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1vz2dhnodD9XetSwpkRkdNTorbdMybAc"></script>
+<!-- import echarts -->
+<script src="../js/echarts.min.js"></script>
+<!-- import echarts-extension-gmap -->
+<script src="../js/echarts-extension-gmap.min.js"></script>
+<script>
+  layui.config({
+    base: '../js/'
+  }).extend({
+    bioarea: 'bioarea'
+  });
+  // Usage
+  layui.use(['jquery', 'form', 'bioarea'], function () {
+    const layer = layui.layer;
+    const $ = layui.$;
+    $(document).ready(resizeMap());
+    $(window).resize(_ => resizeMap())
+
+    const form = layui.form;
+    const bioarea = layui.bioarea;
+
+    bioarea.render({
+      elem: '#bioarea-wrap',
+      defaultData: {
+        provinceCode: '110000',
+        cityCode: '110100',
+        countyCode: '110113'
+      }, form
+    })
+
+    var option = {
+      tooltip: {show: false},
+      gmap: {
+        center: [103, 36],
+        renderOnMoving: true,
+        // echartsLayerZIndex: 2019,
+        zoom: 5,
+        roam: true
+      },
+      series: [
+        {
+          type: 'effectScatter',
+          coordinateSystem: 'gmap',
+          // symbol: 'pin',
+          // dimensions: ['lng', 'lat', 'value1', 'value2'],
+          encode: {
+            tooltip: [0],
+            lng: 2,
+            lat: 1,
+            // itemName: 0
+          }
+        }
+      ]
+    };
+    const chart = echarts.init($("#echarts-google-map").get(0));
+    chart.setOption(option);
+    const gmap = chart.getModel().getComponent('gmap').getGoogleMap();
+
+    chart.on('mouseover', function (params) {
+      $.ajax({
+        url:
+            `https://restapi.amap.com/v3/weather/weatherInfo?city=${params.data[6]}&key=905c6a4746564ecbde5b5267e6201abe&extensions=all`,
+        dataType: "json",
+        success: function (data) {
+          // 在这里处理获取到的JSON数据
+          console.log(data.forecasts[0].casts);
+          var content = params.data[0];
+          $.each(data.forecasts[0].casts, function (index, obj) {
+            var weather = "";
+            if (obj.dayweather.indexOf('晴' > -1)) {
+              weather = "Sunny";
+            } else if (obj.dayweather.indexOf('阴' > -1) || obj.dayweather.indexOf('云' > -1)) {
+              weather = "Cloudy";
+            } else if (obj.dayweather.indexOf('雪' > -1)) {
+              weather = "Snowy";
+            } else if (obj.dayweather.indexOf('雾' > -1)) {
+              weather = "Foggy";
+            } else if (obj.dayweather.indexOf('雨' > -1)) {
+              weather = "Rainy";
+            } else if (obj.dayweather.indexOf('冰' > -1)) {
+              weather = "Haily";
+            }
+            content += `</br>${obj.date} | ${weather} | ${obj.daytemp}℃`;
+          });
+          option.tooltip.formatter = content;
+          option.gmap.center = [];
+          // chart.dispatchAction({type: 'showTip'})
+          option.tooltip.show = true;
+          chart.setOption(option);
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        }
+      })
+    });
+
+    chart.on('mouseout', function (params) {
+      option.tooltip.show = false;
+      chart.setOption(option);
+    })
+    // Get the instance of Google Map
+    initData()
+
+    function test() {
+      $.ajax({
+        url: "../json/spots.json",
+        dataType: "json",
+        success: function (json) {
+          console.log(111);
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        }
+      });
+    }
+
+    form.on('submit(search)', function (data) {
+      $.ajax({
+        url: "../json/spots.json",
+        dataType: "json",
+        success: function (json) {
+          console.log(data.field);
+          option.series[0].data = search(json, data.field);
+          chart.setOption(option);
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        }
+      });
+      return false;
+    });
+
+    function initData() {
+      $.ajax({
+        url: "../json/spots.json",
+        // dataType: "json",
+        success: function (data) {
+          // 在这里处理获取到的JSON数据
+          option.series[0].data = data;
+          chart.setOption(option);
+        },
+        error: function (xhr, status, error) {
+          console.error(error);
+        }
+      });
+    }
+
+    $.ajax({
+      url:
+          "https://restapi.amap.com/v3/weather/weatherInfo?city=110000&key=905c6a4746564ecbde5b5267e6201abe&extensions=all",
+      dataType: "json",
+      success: function (data) {
+        // 在这里处理获取到的JSON数据
+        console.log(data.forecasts[0].casts)
+      },
+      error: function (xhr, status, error) {
+        console.error(error);
+      }
+    })
+
+    function search(data, field) {
+      let filter = "";
+      const keyword = field.keyword.trim();
+      var zoom = 5;
+      if (field.county !== "") {
+        zoom = 11;
+        filter = bioarea.getNameByCode(field.county);
+      } else if (field.city !== "") {
+        zoom = 9;
+        filter = bioarea.getNameByCode(field.city);
+      } else if (field.province !== "") {
+        zoom = 7;
+        filter = bioarea.getNameByCode(field.province);
+      }
+      var result = [];
+      var count = 0;
+      var avgLat = 0;
+      var avgLng = 0;
+      $.each(data, function (index, obj) {
+        if (filter === "" && keyword === "") {
+          count++;
+          avgLat += obj[1];
+          avgLng += obj[2];
+          result.push(obj);
+        } else if (filter === "" && keyword !== "") {
+          if (obj[0].indexOf(keyword) !== -1) {
+            count++;
+            avgLat += obj[1];
+            avgLng += obj[2];
+            result.push(obj);
+          }
+        } else if (filter !== "" && keyword === "") {
+          if (obj[3] === filter || obj[4] === filter || obj[5] === filter) {
+            count++;
+            avgLat += obj[1];
+            avgLng += obj[2];
+            result.push(obj);
+          }
+        } else {
+          if ((obj[3] === filter || obj[4] === filter || obj[5] === filter) && obj[0].indexOf(keyword) !== -1) {
+            count++;
+            avgLat += obj[1];
+            avgLng += obj[2];
+            result.push(obj);
+          }
+        }
+      });
+      if (count > 0) {
+        option.gmap.zoom = zoom;
+        option.gmap.center = [avgLng / count, avgLat / count];
+      }
+      chart.setOption(option);
+      return result;
+    }
+
+    function resizeMap() {
+      const height = $('#search-fieldset').height();
+      $('#echarts-google-map').height($(window).height() - 22 - height);
+    }
+  })
+  ;
+</script>
+</body>
+</html>
