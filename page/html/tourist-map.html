@@ -94,7 +94,7 @@
     var option = {
       tooltip: {show: false},
       gmap: {
-        center: [103, 36],
+        center: getInitCenter(spotData),
         renderOnMoving: true,
         // echartsLayerZIndex: 2019,
         zoom: 5,
@@ -126,9 +126,9 @@
             `https://restapi.amap.com/v3/weather/weatherInfo?city=${params.data[6]}&key=905c6a4746564ecbde5b5267e6201abe&extensions=all`,
         dataType: "json",
         success: function (data) {
-          var content = params.data[0];
+          let content = params.data[0];
           $.each(data.forecasts[0].casts, function (index, obj) {
-            var weather = "";
+            let weather = "";
             if (obj.dayweather.indexOf('晴' > -1)) {
               weather = "Sunny";
             } else if (obj.dayweather.indexOf('阴' > -1) || obj.dayweather.indexOf('云' > -1)) {
@@ -171,7 +171,7 @@
     function search(data, field) {
       let filter = "";
       const keyword = field.keyword.trim();
-      var zoom = 5;
+      let zoom = 5;
       if (field.county !== "") {
         zoom = 12;
         filter = bioarea.getNameByCode(field.county);
@@ -182,10 +182,10 @@
         zoom = 6;
         filter = bioarea.getNameByCode(field.province);
       }
-      var result = [];
-      var count = 0;
-      var avgLat = 0;
-      var avgLng = 0;
+      const result = [];
+      let count = 0;
+      let avgLat = 0;
+      let avgLng = 0;
       $.each(data, function (index, obj) {
         if (filter === "" && keyword === "") {
           count++;
@@ -228,6 +228,18 @@
     function resizeMap() {
       const height = $('#search-fieldset').height();
       $('#echarts-google-map').height($(window).height() - 22 - height);
+    }
+
+    function getInitCenter(data) {
+      let count = 0;
+      let avgLat = 0;
+      let avgLng = 0;
+      $.each(data, function (index, obj) {
+        count++;
+        avgLat += obj[1];
+        avgLng += obj[2];
+      })
+      return [avgLng / count, avgLat / count]
     }
   })
   ;
