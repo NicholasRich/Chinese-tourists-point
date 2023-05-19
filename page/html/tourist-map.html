@@ -126,8 +126,6 @@
             `https://restapi.amap.com/v3/weather/weatherInfo?city=${params.data[6]}&key=905c6a4746564ecbde5b5267e6201abe&extensions=all`,
         dataType: "json",
         success: function (data) {
-          // 在这里处理获取到的JSON数据
-          console.log(data.forecasts[0].casts);
           var content = params.data[0];
           $.each(data.forecasts[0].casts, function (index, obj) {
             var weather = "";
@@ -148,7 +146,7 @@
           });
           option.tooltip.formatter = content;
           option.gmap.center = [];
-          // chart.dispatchAction({type: 'showTip'})
+          option.gmap.zoom = null;
           option.tooltip.show = true;
           chart.setOption(option);
         },
@@ -160,6 +158,8 @@
 
     chart.on('mouseout', function (params) {
       option.tooltip.show = false;
+      option.gmap.center = [];
+      option.gmap.zoom = null;
       chart.setOption(option);
     })
 
@@ -219,7 +219,7 @@
         option.gmap.zoom = zoom;
         option.gmap.center = [avgLng / count, avgLat / count];
       }
-      option.series[0].data=result
+      option.series[0].data = result
       chart.setOption(option);
       console.log(result);
       return result;
