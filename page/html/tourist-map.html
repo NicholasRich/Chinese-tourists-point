@@ -104,6 +104,10 @@
         {
           type: 'effectScatter',
           coordinateSystem: 'gmap',
+          colorBy: 'data',
+          symbolSize: _ => {
+            return Math.round(Math.random() * 10 + 5)
+          },
           // symbol: 'pin',
           // dimensions: ['lng', 'lat', 'value1', 'value2'],
           data: spotData,
