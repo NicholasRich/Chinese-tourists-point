@@ -105,8 +105,9 @@
           type: 'effectScatter',
           coordinateSystem: 'gmap',
           colorBy: 'data',
-          symbolSize: _ => {
-            return Math.round(Math.random() * 10 + 5)
+          symbolSize: (array, params) => {
+            console.log(array)
+            return array[3].length
           },
           // symbol: 'pin',
           // dimensions: ['lng', 'lat', 'value1', 'value2'],
